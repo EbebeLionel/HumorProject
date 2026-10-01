@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 // Fetch fresh data on every request instead of only at build time
 export const dynamic = "force-dynamic";
@@ -10,6 +10,7 @@ type Joke = {
 };
 
 export default async function JokesPage() {
+  const supabase = await createClient();
   const { data: jokes, error } = await supabase
     .from("jokes")
     .select("id, setup, punchline")
