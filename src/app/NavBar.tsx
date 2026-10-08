@@ -7,6 +7,7 @@ export default async function NavBar() {
   return (
     <nav className="nav">
       <Link href="/" className="brand">The Humor Project</Link>
+      {user && <Link href="/create">Create</Link>}
       <Link href="/jokes">Jokes</Link>
       {user && <Link href="/members">Members</Link>}
 

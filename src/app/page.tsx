@@ -1,30 +1,63 @@
 import Link from "next/link";
 import { getUserAndProfile } from "@/lib/auth";
+import { getThemeOfTheDay } from "@/lib/captions";
+import { getFeed, getMyVotes, SORTS, type Sort } from "@/lib/feed";
+import ImageCard from "./ImageCard";
 
-export default async function Home() {
-  const { user, profile } = await getUserAndProfile();
+export const dynamic = "force-dynamic";
+
+const SORT_LABELS: Record<Sort, string> = { hot: "🔥 Hot this week", new: "🆕 New", top: "🏆 All-time top" };
+
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const { supabase, user } = await getUserAndProfile();
+  const { sort: sortParam } = await searchParams;
+  const sort: Sort = SORTS.includes(sortParam as Sort) ? (sortParam as Sort) : "hot";
+
+  const { images, error } = await getFeed(supabase, sort);
+  const myVotes = await getMyVotes(supabase, user?.id, images);
 
   return (
-    <main>
-      <h1>Hello World</h1>
-      <p>
-        <Link href="/jokes">View jokes</Link>
-      </p>
+    <main className="wide">
+      <section className="hero">
+        <p className="muted">Today&apos;s theme</p>
+        <h1>{getThemeOfTheDay()}</h1>
+        <p>
+          Snap something that fits the theme, let AI caption it, and let campus vote on the funniest line.
+        </p>
+        <p>
+          <Link href={user ? "/create" : "/login"} className="button">
+            {user ? "📸 Caption a photo" : "Sign in to post & vote"}
+          </Link>
+        </p>
+      </section>
 
-      {user ? (
-        <section>
-          <p>You&apos;re signed in as {profile?.first_name || user.email}.</p>
-          <p>
-            <Link href="/members">Go to the members lounge →</Link>
-          </p>
-        </section>
+      <nav className="tabs" aria-label="Sort feed">
+        {SORTS.map((s) => (
+          <Link key={s} href={`/?sort=${s}`} className={s === sort ? "tab tab-active" : "tab"}>
+            {SORT_LABELS[s]}
+          </Link>
+        ))}
+      </nav>
+
+      {error ? (
+        <p className="error">Couldn&apos;t load the feed: {error.message}</p>
+      ) : images.length === 0 ? (
+        <p className="muted">
+          {sort === "new" ? "Nothing here yet." : "No upvoted captions yet."} Be the first:{" "}
+          <Link href={user ? "/create" : "/login"}>post a photo</Link>
+          {sort !== "new" && (
+            <>
+              {" "}or <Link href="/?sort=new">vote on new ones</Link>
+            </>
+          )}
+          .
+        </p>
       ) : (
-        <section>
-          <p>🔒 Sign in to unlock the members lounge and your profile.</p>
-          <p>
-            <Link href="/login">Sign in with Google →</Link>
-          </p>
-        </section>
+        <div className="feed">
+          {images.map((image) => (
+            <ImageCard key={image.id} image={image} myVotes={myVotes} signedIn={Boolean(user)} />
+          ))}
+        </div>
       )}
     </main>
   );
