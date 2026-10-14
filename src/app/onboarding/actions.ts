@@ -44,7 +44,7 @@ export async function completeOnboarding(
     return { error };
   }
   revalidatePath("/", "layout");
-  redirect("/members");
+  redirect("/");
 }
 
 // Used by /profile: save and stay on the page

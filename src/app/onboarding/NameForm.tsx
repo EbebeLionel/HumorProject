@@ -15,15 +15,15 @@ export default function NameForm({ action, firstName, lastName, submitLabel }: P
 
   return (
     <form action={formAction} className="stack">
-      <label>
+      <label className="field">
         First name
-        <input name="first_name" defaultValue={firstName ?? ""} required />
+        <input name="first_name" className="input" defaultValue={firstName ?? ""} required />
       </label>
-      <label>
+      <label className="field">
         Last name
-        <input name="last_name" defaultValue={lastName ?? ""} required />
+        <input name="last_name" className="input" defaultValue={lastName ?? ""} required />
       </label>
-      <button type="submit" disabled={pending}>
+      <button type="submit" className="btn" disabled={pending}>
         {pending ? "Saving…" : submitLabel}
       </button>
       {state.error && <p className="error">{state.error}</p>}

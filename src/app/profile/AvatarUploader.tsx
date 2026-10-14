@@ -9,9 +9,10 @@ const MAX_BYTES = 5 * 1024 * 1024;
 type Props = {
   userId: string;
   avatarUrl: string | null;
+  initial: string;
 };
 
-export default function AvatarUploader({ userId, avatarUrl }: Props) {
+export default function AvatarUploader({ userId, avatarUrl, initial }: Props) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,14 +66,14 @@ export default function AvatarUploader({ userId, avatarUrl }: Props) {
   }
 
   return (
-    <div className="stack">
+    <div className="stack" style={{ alignItems: "center" }}>
       {avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={avatarUrl} alt="Your profile photo" className="avatar avatar-lg" />
       ) : (
-        <div className="avatar avatar-lg avatar-placeholder">No photo</div>
+        <div className="avatar avatar-lg avatar-placeholder">{initial}</div>
       )}
-      <label className="file-label">
+      <label className="btn btn-ghost btn-sm">
         {uploading ? "Uploading…" : avatarUrl ? "Change photo" : "Upload photo"}
         <input type="file" accept="image/*" onChange={onFileChange} disabled={uploading} hidden />
       </label>

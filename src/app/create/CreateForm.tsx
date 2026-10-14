@@ -3,11 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CAPTION_IMAGES_BUCKET, VIBES, type VibeId } from "@/lib/captions";
+import { CAPTION_IMAGES_BUCKET, CUSTOM_VIBE_MAX_LENGTH, VIBES, type VibeId } from "@/lib/captions";
 import { generateFromUpload } from "./actions";
 
 const MAX_INPUT_BYTES = 15 * 1024 * 1024;
 const MAX_DIMENSION = 1280;
+
+const CUSTOM_IDEAS = [
+  "Roast it like a Yelp review",
+  "As a dramatic breakup text",
+  "Pretend it's a LinkedIn post",
+  "Overly wholesome grandma energy",
+];
 
 // Re-encode as a resized JPEG: smaller upload, fewer AI tokens, and it strips
 // EXIF metadata (like the GPS location of your dorm) from phone photos
@@ -29,12 +36,15 @@ export default function CreateForm({ userId }: { userId: string }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [vibe, setVibe] = useState<VibeId>(VIBES[0].id);
+  const [dragging, setDragging] = useState(false);
+  const [vibe, setVibe] = useState<VibeId | "custom">(VIBES[0].id);
+  const [customVibe, setCustomVibe] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const chosen = event.target.files?.[0] ?? null;
+  const isCustom = vibe === "custom";
+
+  function chooseFile(chosen: File | null) {
     setError(null);
     if (chosen && !chosen.type.startsWith("image/")) {
       setError("Please choose an image file.");
@@ -49,10 +59,26 @@ export default function CreateForm({ userId }: { userId: string }) {
     setPreview(chosen ? URL.createObjectURL(chosen) : null);
   }
 
+  function onDrop(event: React.DragEvent) {
+    event.preventDefault();
+    setDragging(false);
+    if (!busy) chooseFile(event.dataTransfer.files?.[0] ?? null);
+  }
+
+  function onCustomChange(text: string) {
+    setCustomVibe(text);
+    // Typing your own direction selects it
+    setVibe(text.trim() ? "custom" : vibe === "custom" ? VIBES[0].id : vibe);
+  }
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!file) {
       setError("Choose a photo first.");
+      return;
+    }
+    if (isCustom && customVibe.trim().length < 3) {
+      setError("Describe your vibe in a few words first.");
       return;
     }
     setError(null);
@@ -81,7 +107,7 @@ export default function CreateForm({ userId }: { userId: string }) {
     }
 
     setStatus("AI is writing captions… 🤖");
-    const result = await generateFromUpload(path, vibe);
+    const result = await generateFromUpload(path, vibe, isCustom ? customVibe : undefined);
     if ("error" in result) {
       setStatus(null);
       setError(result.error);
@@ -95,36 +121,83 @@ export default function CreateForm({ userId }: { userId: string }) {
 
   return (
     <form onSubmit={onSubmit} className="stack">
-      <label className="file-label">
-        {file ? "Choose a different photo" : "Choose a photo"}
-        <input type="file" accept="image/*" onChange={onFileChange} disabled={busy} hidden />
+      <label
+        className={["dropzone", preview ? "has-preview" : "", dragging ? "dragging" : ""].join(" ")}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+      >
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
+          disabled={busy}
+          hidden
+        />
+        {preview ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="Preview of your photo" />
+            <span className="btn btn-ghost btn-sm change">Change photo</span>
+          </>
+        ) : (
+          <>
+            <span className="big" aria-hidden="true">📸</span>
+            <strong>Choose a photo</strong>
+            <span className="muted small">or drag it here · JPG, PNG, WebP</span>
+          </>
+        )}
       </label>
-
-      {preview && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="Preview of your photo" className="card-photo" />
-      )}
 
       <fieldset className="vibes" disabled={busy}>
         <legend>Pick a vibe</legend>
         {VIBES.map((v) => (
           <label key={v.id} className={v.id === vibe ? "vibe vibe-active" : "vibe"}>
-            <input
-              type="radio"
-              name="vibe"
-              value={v.id}
-              checked={v.id === vibe}
-              onChange={() => setVibe(v.id)}
-            />
+            <input type="radio" name="vibe" value={v.id} checked={v.id === vibe} onChange={() => setVibe(v.id)} />
             {v.emoji} {v.label}
           </label>
         ))}
+        <label className={isCustom ? "vibe vibe-active" : "vibe"}>
+          <input type="radio" name="vibe" value="custom" checked={isCustom} onChange={() => setVibe("custom")} />
+          ✍️ My own vibe
+        </label>
+
+        <div className={isCustom ? "custom-vibe active" : "custom-vibe"}>
+          <label className="field">
+            …or tell the AI exactly where to take it
+            <input
+              className="input"
+              value={customVibe}
+              onChange={(event) => onCustomChange(event.target.value)}
+              onFocus={() => customVibe.trim() && setVibe("custom")}
+              maxLength={CUSTOM_VIBE_MAX_LENGTH}
+              placeholder="e.g. narrate it like a true-crime podcast about the dining hall"
+            />
+          </label>
+          <div className="custom-vibe-foot">
+            <span>Your direction is sent to the AI along with the photo.</span>
+            <span>
+              {customVibe.length}/{CUSTOM_VIBE_MAX_LENGTH}
+            </span>
+          </div>
+          <div className="idea-chips">
+            {CUSTOM_IDEAS.map((idea) => (
+              <button key={idea} type="button" className="idea-chip" onClick={() => onCustomChange(idea)}>
+                {idea}
+              </button>
+            ))}
+          </div>
+        </div>
       </fieldset>
 
-      <button type="submit" disabled={busy || !file}>
-        {status ?? "Generate captions"}
+      <button type="submit" className="btn btn-block" disabled={busy || !file}>
+        {busy && <span className="spinner" />}
+        {status ?? "✨ Generate captions"}
       </button>
-      {error && <p className="error">{error}</p>}
+      {error && <p className="notice error">{error}</p>}
       <p className="muted small">Photos are public once posted. Don&apos;t upload people who didn&apos;t agree to it.</p>
     </form>
   );

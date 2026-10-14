@@ -20,22 +20,19 @@ export default async function ImagePage({ params, searchParams }: PageProps<"/i/
   const myVotes = await getMyVotes(supabase, user?.id, [image]);
 
   return (
-    <main>
+    <main className="page">
       {isNew && user?.id === image.user_id && (
-        <p className="success">
-          Posted! Vote for your favorite caption, then send this page to your group chat.
+        <p className="notice">
+          🎉 Posted! Vote for your favorite caption, then send this page to your group chat.
         </p>
       )}
-      <ImageCard image={image} myVotes={myVotes} signedIn={Boolean(user)} linkToDetail={false} />
-      <p>
-        <Link href="/">← Back to the feed</Link>
+      <ImageCard image={image} myVotes={myVotes} userId={user?.id ?? null} linkToDetail={false} />
+      <div className="row">
+        <Link href="/" className="btn btn-ghost btn-sm">← Back to swiping</Link>
         {user && (
-          <>
-            {" · "}
-            <Link href="/create">Caption another photo</Link>
-          </>
+          <Link href="/create" className="btn btn-sm">📸 Caption another photo</Link>
         )}
-      </p>
+      </div>
     </main>
   );
 }

@@ -82,7 +82,7 @@ export default function VoteButtons({ captionId, initialVote, initialUpvotes, in
       </button>
       {showSignIn && (
         <span className="vote-hint">
-          <Link href="/login">Sign in</Link> to vote
+          <Link href="/login">Log in</Link> to vote
         </span>
       )}
       {error && !showSignIn && <span className="error vote-hint">{error}</span>}

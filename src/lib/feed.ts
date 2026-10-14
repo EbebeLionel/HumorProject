@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { IMAGE_WITH_CAPTIONS_SELECT, type ImageWithCaptions } from "@/lib/captions";
+import { IMAGE_WITH_CAPTIONS_SELECT, type Caption, type ImageWithCaptions } from "@/lib/captions";
 
 export const SORTS = ["hot", "new", "top"] as const;
 export type Sort = (typeof SORTS)[number];
@@ -66,6 +66,51 @@ export async function getImage(supabase: SupabaseClient, id: string) {
     .eq("id", id)
     .maybeSingle<ImageWithCaptions>();
   return data ? sortCaptions([data])[0] : null;
+}
+
+const DECK_IMAGES = 30;
+
+export type DeckCard = {
+  image: Omit<ImageWithCaptions, "captions">;
+  caption: Caption;
+};
+
+// Home page swipe deck: one card per caption on recent photos, skipping captions the
+// user already voted on. Captions are dealt round-robin across photos so the same
+// photo doesn't show up several times in a row.
+export async function getDeck(supabase: SupabaseClient, userId: string | undefined) {
+  const { data, error } = await supabase
+    .from("images")
+    .select(IMAGE_WITH_CAPTIONS_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(DECK_IMAGES)
+    .returns<ImageWithCaptions[]>();
+
+  const images = data ?? [];
+  const myVotes = await getMyVotes(supabase, userId, images);
+
+  const cards: DeckCard[] = [];
+  const rounds = Math.max(0, ...images.map((image) => image.captions.length));
+  for (let round = 0; round < rounds; round++) {
+    for (const { captions, ...image } of images) {
+      const caption = captions[round];
+      if (caption && !(caption.id in myVotes)) {
+        cards.push({ image, caption });
+      }
+    }
+  }
+
+  return { cards, error };
+}
+
+export async function getMyImages(supabase: SupabaseClient, userId: string) {
+  const { data } = await supabase
+    .from("images")
+    .select(IMAGE_WITH_CAPTIONS_SELECT)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .returns<ImageWithCaptions[]>();
+  return sortCaptions(data ?? []);
 }
 
 // The signed-in user's votes on these captions, as { captionId: 1 | -1 }

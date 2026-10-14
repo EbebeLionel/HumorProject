@@ -10,13 +10,17 @@ export default async function CreatePage() {
   }
 
   return (
-    <main>
-      <h1>Caption a photo</h1>
-      <p>
-        Today&apos;s theme: <strong>{getThemeOfTheDay()}</strong>. Upload a photo, pick a vibe, and AI will write
-        four captions. Everyone can then vote on the funniest one.
-      </p>
-      <CreateForm userId={user.id} />
+    <main className="page">
+      <header className="page-head">
+        <h1>Caption a photo</h1>
+        <p>
+          Today&apos;s theme: <strong>{getThemeOfTheDay()}</strong>. Upload a photo, pick a vibe (or invent your
+          own), and AI writes four captions for everyone to swipe on.
+        </p>
+      </header>
+      <section className="panel">
+        <CreateForm userId={user.id} />
+      </section>
     </main>
   );
 }

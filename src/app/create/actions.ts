@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { CAPTION_IMAGES_BUCKET, getThemeOfTheDay, getVibe } from "@/lib/captions";
+import {
+  CAPTION_IMAGES_BUCKET,
+  CUSTOM_VIBE_PREFIX,
+  cleanCustomVibe,
+  getThemeOfTheDay,
+  getVibe,
+} from "@/lib/captions";
 import { buildCaptionPrompt, generateCaptions } from "@/lib/gemini";
 
 // Keeps one person from burning through the free AI quota
@@ -10,8 +16,13 @@ const DAILY_LIMIT = 10;
 
 export type GenerateResult = { error: string } | { imageId: string };
 
-// Called after the browser has uploaded the photo to Storage at `storagePath`
-export async function generateFromUpload(storagePath: string, vibeId: string): Promise<GenerateResult> {
+// Called after the browser has uploaded the photo to Storage at `storagePath`.
+// Pass a preset vibe id, or vibeId "custom" plus the direction the user typed.
+export async function generateFromUpload(
+  storagePath: string,
+  vibeId: string,
+  customVibe?: string
+): Promise<GenerateResult> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,7 +32,17 @@ export async function generateFromUpload(storagePath: string, vibeId: string): P
     return { error: "Sign in to generate captions." };
   }
 
-  const vibe = getVibe(vibeId);
+  let vibe: { id: string; instructions: string } | undefined = getVibe(vibeId);
+  if (vibeId === "custom") {
+    const text = cleanCustomVibe(customVibe ?? "");
+    if (text.length < 3) {
+      return { error: "Describe your vibe in a few words first." };
+    }
+    vibe = {
+      id: `${CUSTOM_VIBE_PREFIX}${text}`,
+      instructions: `The user asked for this direction, follow it: "${text}"`,
+    };
+  }
   if (!vibe) {
     return { error: "Pick a vibe first." };
   }

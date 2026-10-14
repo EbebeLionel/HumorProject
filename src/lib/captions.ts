@@ -44,6 +44,23 @@ export function getVibe(id: string) {
   return VIBES.find((vibe) => vibe.id === id);
 }
 
+// A vibe the user typed themselves is stored in images.vibe as "custom:<their text>"
+export const CUSTOM_VIBE_PREFIX = "custom:";
+export const CUSTOM_VIBE_MAX_LENGTH = 120;
+
+export function cleanCustomVibe(text: string) {
+  return text.replace(/\s+/g, " ").trim().slice(0, CUSTOM_VIBE_MAX_LENGTH);
+}
+
+// Label + emoji for showing an image's vibe, preset or custom
+export function getVibeLabel(stored: string) {
+  if (stored.startsWith(CUSTOM_VIBE_PREFIX)) {
+    return { emoji: "✍️", label: stored.slice(CUSTOM_VIBE_PREFIX.length) };
+  }
+  const vibe = getVibe(stored);
+  return vibe ? { emoji: vibe.emoji, label: vibe.label } : null;
+}
+
 // A new theme every day gives people a reason to come back and something to go photograph
 const THEMES = [
   "Subway moments",
