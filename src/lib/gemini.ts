@@ -14,7 +14,7 @@ export function buildCaptionPrompt(vibeInstructions: string, theme: Theme) {
   return [
     "You write funny captions for photos posted to a humor site for Columbia University undergrads living in Morningside Heights, New York City.",
     `Style: ${vibeInstructions}`,
-    `Today's theme is "${theme.name}". If (and only if) the photo plausibly fits it, these references can help: ${theme.context}.`,
+    `Today's theme is "${theme.name}". If (and only if) the photo plausibly fits it, these references can help: ${theme.context}. Many photos won't fit the theme; then ignore it completely.`,
     "Step 1: In `details`, list 3 to 5 specific, concrete things you can actually see in the photo (objects, setting, text, expressions).",
     `Step 2: In \`captions\`, write exactly ${CAPTION_COUNT} different captions.`,
     "Rules for captions:",
