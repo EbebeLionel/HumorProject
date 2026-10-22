@@ -6,19 +6,22 @@ const MODELS = [process.env.GEMINI_MODEL || "gemini-3.5-flash", "gemini-3.5-flas
 
 const CAPTION_COUNT = 4;
 
-// Captions used to drift into generic jokes, so the model now lists what it sees first
-// and every caption has to build on one of those details plus a real Columbia reference.
+// Captions used to bolt campus references onto unrelated photos (e.g. "Columbia housing"
+// on a picture of a random office tower). The model now lists what it actually sees first,
+// every caption has to build on one of those details, and campus/theme references are
+// only allowed when they genuinely fit the photo.
 export function buildCaptionPrompt(vibeInstructions: string, theme: Theme) {
   return [
     "You write funny captions for photos posted to a humor site for Columbia University undergrads living in Morningside Heights, New York City.",
     `Style: ${vibeInstructions}`,
-    `Today's theme is "${theme.name}". Columbia references that fit it: ${theme.context}.`,
+    `Today's theme is "${theme.name}". If (and only if) the photo plausibly fits it, these references can help: ${theme.context}.`,
     "Step 1: In `details`, list 3 to 5 specific, concrete things you can actually see in the photo (objects, setting, text, expressions).",
     `Step 2: In \`captions\`, write exactly ${CAPTION_COUNT} different captions.`,
     "Rules for captions:",
-    "- Each caption must build its joke on at least one item from `details`, so anyone reading it next to the photo sees why it belongs to THIS photo.",
-    "- Each caption must also connect to Columbia student life: use the theme references above when the photo plausibly fits the theme, otherwise any real Columbia/Morningside reference (Butler, John Jay, Low Steps, the Core, the 1 train, dorms, dining halls).",
-    "- No generic jokes that would work on any photo, and no jokes about things that aren't in the photo.",
+    "- Each caption must build its joke on at least one item from `details`, so anyone reading it next to the photo instantly sees why it belongs to THIS photo.",
+    "- Never claim the photo shows a specific place (a Columbia dorm, Butler, John Jay, a dining hall) or situation unless the photo clearly shows it. Don't invent context the photo doesn't support.",
+    "- A student point of view is welcome, but only use a Columbia, Morningside or theme reference when it connects naturally to what's in the photo. A sharp joke about the photo beats a forced campus reference.",
+    "- No generic jokes that would work on any photo.",
     "- Under 140 characters each. No hashtags. No quotation marks around the caption.",
     "- Keep it clever, not mean: no jokes about anyone's appearance, race, gender, religion, or body.",
     "- Make each caption a different kind of joke.",
