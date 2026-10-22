@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getVibeLabel } from "@/lib/captions";
 import type { DeckCard } from "@/lib/feed";
@@ -22,10 +23,15 @@ function formatDate(iso: string) {
 type Props = {
   cards: DeckCard[];
   userId: string | null;
+  votedToday: number;
 };
 
-export default function SwipeDeck({ cards, userId }: Props) {
+export default function SwipeDeck({ cards, userId, votedToday }: Props) {
+  const router = useRouter();
   const [queue, setQueue] = useState(cards);
+  const [tally, setTally] = useState({ funny: 0, notFunny: 0, withCrowd: 0, judged: 0 });
+  const [openingResults, setOpeningResults] = useState(false);
+  const pendingVotes = useRef(new Set<Promise<unknown>>());
   const [skipped, setSkipped] = useState<DeckCard[]>([]);
   const [seen, setSeen] = useState(0);
   const [leaving, setLeaving] = useState<Direction | null>(null);
@@ -55,16 +61,28 @@ export default function SwipeDeck({ cards, userId }: Props) {
       setSkipped((prev) => [...prev, card]);
     } else {
       const vote = decision === "like" ? 1 : -1;
-      castVote(card.caption.id, vote).then((result) => {
+      const request = castVote(card.caption.id, vote).then((result) => {
+        pendingVotes.current.delete(request);
         if ("error" in result) {
           setStatus({ text: result.error, error: true });
           if (result.signedOut) setShowGate(true);
-        } else {
-          setStatus({
-            text: `${vote === 1 ? "😂 Funny" : "😐 Not funny"} · ${result.upvotes} funny / ${result.downvotes} not so far`,
-          });
+          return;
         }
+        // Compare with everyone else's votes (not counting this one)
+        const othersUp = result.upvotes - (vote === 1 ? 1 : 0);
+        const othersDown = result.downvotes - (vote === -1 ? 1 : 0);
+        const crowd = Math.sign(othersUp - othersDown);
+        setTally((prev) => ({
+          funny: prev.funny + (vote === 1 ? 1 : 0),
+          notFunny: prev.notFunny + (vote === -1 ? 1 : 0),
+          judged: prev.judged + (crowd !== 0 ? 1 : 0),
+          withCrowd: prev.withCrowd + (crowd === vote ? 1 : 0),
+        }));
+        setStatus({
+          text: `${vote === 1 ? "😂 Funny" : "😐 Not funny"} · ${result.upvotes} funny / ${result.downvotes} not so far`,
+        });
       });
+      pendingVotes.current.add(request);
     }
 
     setTimeout(() => {
@@ -135,29 +153,68 @@ export default function SwipeDeck({ cards, userId }: Props) {
     return () => clearTimeout(timer);
   }, [status]);
 
+  // Let the last votes land before the results page reads them
+  async function openResults() {
+    setOpeningResults(true);
+    await Promise.allSettled([...pendingVotes.current]);
+    router.push("/recap");
+  }
+
   if (!current) {
+    const votedThisRound = tally.funny + tally.notFunny;
+    const hasResults = Boolean(userId) && votedThisRound + votedToday > 0;
+
     return (
       <>
         <section className="panel empty">
-          <div className="empty-emoji">{total === 0 && skipped.length === 0 ? "📭" : "🎉"}</div>
+          <div className="empty-emoji">{votedThisRound > 0 ? "🏁" : total === 0 && skipped.length === 0 ? "📭" : "🎉"}</div>
           <h2 className="glow-title">
-            {total === 0 && skipped.length === 0 ? "No new captions to rate" : "You're all caught up!"}
+            {votedThisRound > 0
+              ? "Round complete!"
+              : total === 0 && skipped.length === 0
+                ? "No new captions to rate"
+                : "You're all caught up!"}
           </h2>
-          <p>
-            {userId
-              ? "Post a photo to give everyone something new to swipe on, or check today's funniest captions."
-              : "Log in to post your own photos and vote on captions."}
-          </p>
+
+          {votedThisRound > 0 ? (
+            <div className="stat-row round-stats">
+              <div className="stat">
+                <strong>{tally.funny}</strong>
+                <span>😂 funny</span>
+              </div>
+              <div className="stat">
+                <strong>{tally.notFunny}</strong>
+                <span>😐 not funny</span>
+              </div>
+              <div className="stat">
+                <strong>{tally.judged ? `${Math.round((tally.withCrowd / tally.judged) * 100)}%` : "–"}</strong>
+                <span>🤝 agreed with campus</span>
+              </div>
+            </div>
+          ) : (
+            <p>
+              {userId
+                ? "Post a photo to give everyone something new to swipe on, or check today's funniest captions."
+                : "Log in to post your own photos and vote on captions."}
+            </p>
+          )}
+
           <div className="row" style={{ justifyContent: "center" }}>
+            {hasResults && (
+              <button type="button" className="btn" onClick={openResults} disabled={openingResults}>
+                {openingResults && <span className="spinner" />}
+                📊 See your results
+              </button>
+            )}
             {skipped.length > 0 && (
               <button type="button" className="btn btn-ghost" onClick={revisitSkipped}>
                 ↺ Revisit {skipped.length} skipped
               </button>
             )}
-            <Link href={userId ? "/create" : "/login"} className="btn">
+            <Link href={userId ? "/create" : "/login"} className={hasResults ? "btn btn-ghost" : "btn"}>
               {userId ? "📸 Post a photo" : "Log in"}
             </Link>
-            <Link href="/top" className="btn btn-ghost">
+            <Link href="/top?sort=today" className="btn btn-ghost">
               🏆 Leaderboard
             </Link>
           </div>

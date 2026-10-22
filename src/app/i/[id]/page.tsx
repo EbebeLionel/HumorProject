@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { getImage, getMyVotes } from "@/lib/feed";
 import ImageCard from "../../ImageCard";
+import OwnerDelete from "../../OwnerDelete";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,13 @@ export default async function ImagePage({ params, searchParams }: PageProps<"/i/
   return (
     <main className="page">
       {isNew && user?.id === image.user_id && (
-        <p className="notice">
-          🎉 Posted! Vote for your favorite caption, then send this page to your group chat.
-        </p>
+        <div className="notice posted-notice">
+          <p>🎉 Posted! Vote for your favorite caption, then send this page to your group chat.</p>
+          <div className="row">
+            <span className="muted small">Wrong photo?</span>
+            <OwnerDelete imageId={image.id} redirectTo="/create" large label="Delete this post" />
+          </div>
+        </div>
       )}
       <ImageCard image={image} myVotes={myVotes} userId={user?.id ?? null} linkToDetail={false} />
       <div className="row">

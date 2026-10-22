@@ -7,10 +7,12 @@ type Props = {
   imageId: string;
   onDeleted: () => void;
   onError?: (message: string) => void;
+  large?: boolean; // full-size red button instead of the small overlay pill
+  label?: string;
 };
 
 // Only rendered for the photo's uploader. First tap arms it, second tap deletes.
-export default function DeleteImageButton({ imageId, onDeleted, onError }: Props) {
+export default function DeleteImageButton({ imageId, onDeleted, onError, large, label = "Delete" }: Props) {
   const [armed, setArmed] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -41,13 +43,13 @@ export default function DeleteImageButton({ imageId, onDeleted, onError }: Props
   return (
     <button
       type="button"
-      className={armed ? "delete-btn confirm" : "delete-btn"}
+      className={large ? `btn btn-danger btn-sm${armed ? " confirm" : ""}` : armed ? "delete-btn confirm" : "delete-btn"}
       onClick={onClick}
       onPointerDown={(event) => event.stopPropagation()}
       disabled={pending}
       title="Delete your photo"
     >
-      🗑 {pending ? "Deleting…" : armed ? "Tap to confirm" : "Delete"}
+      🗑 {pending ? "Deleting…" : armed ? "Tap again to delete" : label}
     </button>
   );
 }

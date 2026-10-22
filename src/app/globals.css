@@ -1152,10 +1152,12 @@ label.field {
   background: #12031a;
 }
 
-.dropzone .change {
+.dropzone-actions {
   position: absolute;
   bottom: 12px;
   right: 12px;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .vibes {
@@ -1382,4 +1384,300 @@ label.field {
   .deck-actions {
     gap: 1rem;
   }
+}
+
+/* ---------- Daily challenge (home) ---------- */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink);
+}
+
+.challenge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.challenge-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.streak {
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ffd27a;
+  background: rgba(255, 170, 60, 0.12);
+  border: 1px solid rgba(255, 170, 60, 0.35);
+}
+
+.challenge-theme {
+  font-size: 1.6rem;
+  line-height: 1.15;
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(69, 243, 255, 0.35);
+}
+
+.challenge-blurb {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.challenge-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.challenge-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+}
+
+.challenge-steps .check {
+  display: inline-grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1.5px solid rgba(69, 243, 255, 0.45);
+  color: var(--plum);
+}
+
+.challenge-steps li.done .check {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.challenge-steps li.done {
+  color: var(--text-soft);
+}
+
+.challenge-complete {
+  font-weight: 600;
+  color: var(--cyan) !important;
+}
+
+.winner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.4rem;
+  padding: 0.7rem;
+  border-radius: 18px 6px;
+  background: rgba(255, 210, 122, 0.06);
+  border: 1px solid rgba(255, 210, 122, 0.25);
+  transition: border-color 0.2s;
+}
+
+.winner:hover {
+  border-color: rgba(255, 210, 122, 0.6);
+}
+
+.winner img {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 12px 4px;
+}
+
+.winner p {
+  margin: 0.15rem 0;
+  font-size: 0.9rem;
+}
+
+.winner-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffd27a;
+}
+
+.round-stats {
+  margin: 0.5rem 0 1.25rem;
+  text-align: center;
+}
+
+/* ---------- Leaderboard podium ---------- */
+.podium {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.podium-place {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, var(--plum-2), var(--plum-3));
+  border: 1px solid var(--plum-line);
+}
+
+.podium-place.place-1 {
+  border-color: rgba(255, 210, 122, 0.6);
+  box-shadow: 0 0 40px rgba(255, 210, 122, 0.15);
+}
+
+.podium-place img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 14px 4px;
+}
+
+.podium-medal {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.5rem;
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* ---------- Results (recap) ---------- */
+.verdict {
+  text-align: center;
+}
+
+.verdict p {
+  color: var(--text-soft);
+}
+
+.recap-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recap-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.recap-rank {
+  width: 2rem;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.recap-thumb img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px 4px;
+}
+
+.recap-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.recap-body p {
+  font-size: 0.92rem;
+}
+
+.recap-chip {
+  margin-left: 0.5rem;
+}
+
+.crowd-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(243, 53, 126, 0.35);
+  overflow: hidden;
+}
+
+.crowd-bar span {
+  display: block;
+  height: 100%;
+  background: var(--cyan);
+}
+
+.challenge-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+/* ---------- My posts ---------- */
+.my-posts {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.my-post {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.my-post-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 16px 4px;
+}
+
+.my-post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.my-post-body .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.my-post-caption {
+  font-size: 0.95rem;
+}
+
+.btn-danger.confirm {
+  box-shadow: 0 0 0 2px #fff, 0 8px 25px rgba(243, 53, 126, 0.5);
+}
+
+.posted-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.posted-notice .row {
+  align-items: center;
 }

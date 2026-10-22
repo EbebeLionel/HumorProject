@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CAPTION_IMAGES_BUCKET, CUSTOM_VIBE_MAX_LENGTH, VIBES, type VibeId } from "@/lib/captions";
 import { generateFromUpload } from "./actions";
@@ -34,6 +34,7 @@ async function prepareImage(file: File): Promise<Blob> {
 
 export default function CreateForm({ userId }: { userId: string }) {
   const router = useRouter();
+  const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -57,6 +58,12 @@ export default function CreateForm({ userId }: { userId: string }) {
     setFile(chosen);
     if (preview) URL.revokeObjectURL(preview);
     setPreview(chosen ? URL.createObjectURL(chosen) : null);
+  }
+
+  function removeFile() {
+    chooseFile(null);
+    // Clear the input too, so picking the same file again still fires onChange
+    if (fileInput.current) fileInput.current.value = "";
   }
 
   function onDrop(event: React.DragEvent) {
@@ -131,6 +138,7 @@ export default function CreateForm({ userId }: { userId: string }) {
         onDrop={onDrop}
       >
         <input
+          ref={fileInput}
           type="file"
           accept="image/*"
           onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
@@ -141,7 +149,21 @@ export default function CreateForm({ userId }: { userId: string }) {
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="Preview of your photo" />
-            <span className="btn btn-ghost btn-sm change">Change photo</span>
+            <span className="dropzone-actions">
+              <span className="btn btn-ghost btn-sm">Change photo</span>
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                disabled={busy}
+                onClick={(event) => {
+                  // Inside the <label>, so stop it from opening the file picker
+                  event.preventDefault();
+                  removeFile();
+                }}
+              >
+                ✕ Remove
+              </button>
+            </span>
           </>
         ) : (
           <>

@@ -44,7 +44,12 @@ export default async function ProfilePage() {
       </section>
 
       <section className="panel">
-        <h2>Your posts ({myImages.length})</h2>
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <h2>Your posts ({myImages.length})</h2>
+          {myImages.length > 0 && (
+            <Link href="/mine" className="text-link small">Manage &amp; delete →</Link>
+          )}
+        </div>
         {myImages.length === 0 ? (
           <p className="muted">
             Nothing yet. <Link href="/create" className="text-link">Caption your first photo →</Link>

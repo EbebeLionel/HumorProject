@@ -6,7 +6,7 @@ import {
   CAPTION_IMAGES_BUCKET,
   CUSTOM_VIBE_PREFIX,
   cleanCustomVibe,
-  getThemeOfTheDay,
+  getDailyTheme,
   getVibe,
 } from "@/lib/captions";
 import { buildCaptionPrompt, generateCaptions } from "@/lib/gemini";
@@ -77,7 +77,7 @@ export async function generateFromUpload(
   const mimeType = imageRes.headers.get("content-type") ?? "image/jpeg";
   const data = Buffer.from(await imageRes.arrayBuffer()).toString("base64");
 
-  const theme = getThemeOfTheDay();
+  const theme = getDailyTheme();
   const prompt = buildCaptionPrompt(vibe.instructions, theme);
 
   let result;
@@ -95,7 +95,7 @@ export async function generateFromUpload(
       storage_path: storagePath,
       image_url: publicUrl,
       vibe: vibe.id,
-      theme,
+      theme: theme.name,
     })
     .select("id")
     .single();

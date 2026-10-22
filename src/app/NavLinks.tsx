@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/", label: "Home", icon: "🏠", membersOnly: false },
   { href: "/create", label: "Create", icon: "📸", membersOnly: true },
   { href: "/top", label: "Top", icon: "🏆", membersOnly: false },
+  { href: "/mine", label: "My posts", icon: "🗂️", membersOnly: true },
   { href: "/members", label: "Members", icon: "👥", membersOnly: true },
 ];
 

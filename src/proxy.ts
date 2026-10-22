@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that require a signed-in user
-const PROTECTED_PREFIXES = ["/members", "/profile", "/onboarding", "/create"];
+const PROTECTED_PREFIXES = ["/members", "/profile", "/onboarding", "/create", "/mine", "/recap"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
